@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Book BESTI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { besti: { red: '#dc2626', dark: '#111827' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #111827; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-right: 1px solid #e5e7eb; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        
+        @keyframes shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .animate-shine {
+            background: linear-gradient(90deg, #111827 0%, #111827 40%, #dc2626 50%, #111827 60%, #111827 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shine 8s linear infinite;
+        }
+    </style>
+
+    <!-- DearFlip CSS & JS -->
+    <link href="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/css/dflip.min.css" rel="stylesheet" type="text/css">
+    <link href="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/css/themify-icons.min.css" rel="stylesheet" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/js/dflip.min.js"></script>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+    <aside class="w-full md:w-72 glass-panel flex flex-col z-20 shrink-0">
+        <div class="p-6 md:p-8 flex items-center justify-between border-b border-gray-100 bg-white">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 shrink-0 rounded-xl bg-besti-red flex items-center justify-center shadow-lg shadow-red-200">
+                    <i class="fas fa-book-open text-white text-lg"></i>
+                </div>
+                <div class="flex flex-col overflow-hidden">
+                    <h1 class="text-2xl font-black tracking-tight leading-none animate-shine">BESTI</h1>
+                    <span class="text-[9px] font-bold text-gray-500 mt-1 tracking-wider uppercase whitespace-nowrap">Buku Elektronik Standar Industri</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 md:p-8 flex-1 overflow-y-auto scrollbar-hide space-y-8">
+            <!-- Tentang Pengembang -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative group transition-all hover:border-red-100">
+                <div id="btn-edit-pengembang" class="absolute top-3 right-3 hidden">
+                    <button onclick="openEditAuthorModal()" class="w-8 h-8 rounded-full bg-red-50 text-besti-red flex items-center justify-center hover:bg-besti-red hover:text-white transition-colors" title="Edit Pengembang">
+                        <i class="fas fa-pen text-xs"></i>
+                    </button>
+                </div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fas fa-users text-gray-300"></i> Tentang Pengembang
+                </h3>
+                <div id="author-name-list" class="flex flex-wrap gap-2 mb-3">
+                    <div class="h-6 w-24 bg-gray-200 animate-pulse rounded-full"></div>
+                </div>
+                <p id="author-desc" class="text-sm text-gray-600 leading-relaxed italic border-l-2 border-besti-red pl-3"></p>
+            </div>
+
+            <!-- Panel Testimoni MGM -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm transition-all hover:border-red-100">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fas fa-comment-dots text-gray-300"></i> Testimoni MGM
+                </h3>
+                <div id="testimoni-list" class="space-y-4 mb-4 max-h-60 overflow-y-auto pr-1">
+                    <p class="text-xs text-gray-500 text-center italic">Memuat testimoni...</p>
+                </div>
+                <button onclick="openTestimoniModal()" class="w-full py-2.5 px-4 bg-gray-50 hover:bg-red-50 text-gray-700 hover:text-besti-red text-sm font-semibold rounded-xl border border-gray-200 hover:border-red-200 transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-plus"></i> Tambah Testimoni
+                </button>
+            </div>
+
+            <!-- Login Admin -->
+            <div id="admin-login-panel" class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-besti-red"></div>
+                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-lock text-gray-400"></i> Akses Admin</h3>
+                <input type="text" id="admin-user" placeholder="Username" class="w-full bg-gray-50 text-gray-800 text-sm rounded-lg p-2.5 mb-2 outline-none border border-gray-300 focus:border-besti-red">
+                <input type="password" id="admin-pass" placeholder="Password" class="w-full bg-gray-50 text-gray-800 text-sm rounded-lg p-2.5 mb-3 outline-none border border-gray-300 focus:border-besti-red">
+                <button onclick="loginAdmin()" class="w-full bg-besti-red hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm shadow-md">Login Sistem</button>
+            </div>
+
+            <!-- Mode Admin Aktif -->
+            <div id="admin-active-panel" class="hidden bg-red-50 border border-red-100 rounded-2xl p-5 text-center shadow-sm">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-red-100"><i class="fas fa-user-shield text-besti-red text-xl"></i></div>
+                <h3 class="text-sm font-bold text-gray-900 mb-1">Mode Admin Aktif</h3>
+                <p class="text-xs text-gray-600 mb-4">Anda memiliki akses penuh.</p>
+                <div class="space-y-2">
+                    <button onclick="openAddModal()" class="w-full bg-besti-red hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm shadow-md flex items-center justify-center gap-2">
+                        <i class="fas fa-plus-circle"></i> Tambah Buku Baru
+                    </button>
+                    <button onclick="logoutAdmin()" class="w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg transition-colors text-sm">Keluar</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-gray-50/50">
+        <!-- Hero Section -->
+        <div class="relative w-full h-[40vh] md:h-[50vh] min-h-[300px] bg-gray-900 overflow-hidden flex items-end">
+            <img id="hero-bg" src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1600&h=600&fit=crop" alt="Hero" class="absolute inset-0 w-full h-full object-cover opacity-60 scale-105 transition-transform duration-[10s]">
+            <div class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
+            <div class="relative z-10 p-6 md:p-12 w-full max-w-5xl">
+                <span class="inline-block px-3 py-1 bg-red-100 text-besti-red font-bold text-xs rounded-full mb-4 shadow-sm border border-red-200">RILIS TERBARU</span>
+                <h2 id="hero-title" class="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                    Perpustakaan <span class="text-transparent bg-clip-text bg-gradient-to-r from-besti-red to-red-500">Digital</span>
+                </h2>
+                <p id="hero-desc" class="text-gray-600 text-sm md:text-base max-w-xl mb-6 leading-relaxed font-medium line-clamp-3">Jelajahi berbagai dokumen, panduan, dan standar literasi terbaik dari koleksi kami untuk mendukung pengetahuan Anda.</p>
+                <div class="flex flex-wrap gap-4">
+                    <button id="hero-btn" onclick="document.getElementById('books-section').scrollIntoView({behavior: 'smooth'})" class="bg-besti-red hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-red-200 transition-all hover:scale-105 flex items-center gap-3">
+                        <i class="fas fa-book-open"></i> Baca Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Koleksi Buku Vertikal -->
+        <div id="books-section" class="p-6 md:p-12 max-w-7xl mx-auto">
+            <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-8 border-b-2 border-red-100 pb-2 inline-block">Koleksi E-Book BESTI</h3>
+            <div id="books-loading" class="flex justify-center py-10"><div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-besti-red"></div></div>
+            <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 hidden">
+                <!-- Books dipasukkan dari JS -->
+            </div>
+        </div>
+
+        <!-- Panel Ulasan Aplikasi Besar Bawah -->
+        <div class="p-6 md:p-12 max-w-7xl mx-auto border-t border-gray-200 bg-gray-50/30">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <div>
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 border-b-2 border-red-100 pb-2 inline-block mb-2">Ulasan Pengunjung</h3>
+                    <p class="text-sm text-gray-500">Apa kata mereka tentang aplikasi dan koleksi buku BESTI.</p>
+                </div>
+                <button onclick="openUlasanModal()" class="bg-white border border-gray-200 hover:border-besti-red text-gray-700 hover:text-besti-red px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center gap-2 w-max">
+                    <i class="fas fa-star text-yellow-400"></i> Beri Ulasan Anda
+                </button>
+            </div>
+            <div id="app-reviews-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Reviews dipasukkan dari JS -->
+            </div>
+        </div>
+
+        <footer class="bg-white border-t border-gray-200 p-6 md:p-12 shadow-sm">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-500 text-sm font-medium">© 2026 E-Book BESTI. All rights reserved.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="text-gray-400 hover:text-besti-red transition-colors"><i class="fab fa-instagram text-xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-besti-red transition-colors"><i class="fab fa-youtube text-xl"></i></a>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    
+    <!-- Modal Flipbook -->
+    <div id="flipbook-modal" class="fixed inset-0 bg-gray-900/95 backdrop-blur-md z-[100] hidden flex flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <button onclick="closeFlipbook()" class="absolute top-4 right-4 text-white hover:text-red-500 z-[110] w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors shadow-lg"><i class="fas fa-times text-xl"></i></button>
+        <div id="flipbook-container" class="w-full max-w-6xl h-[85vh] rounded-xl overflow-hidden shadow-2xl relative">
+            <div class="_df_book" id="dflip-viewer" source=""></div>
+        </div>
+    </div>
+
+    <!-- Modal Detail Buku -->
+    <div id="book-detail-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col md:flex-row relative max-h-[90vh]">
+            <button onclick="closeBookDetail()" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 z-10 w-8 h-8 bg-gray-100 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors"><i class="fas fa-times text-lg"></i></button>
+            <div class="w-full md:w-2/5 bg-gray-100 shrink-0 relative flex items-center justify-center p-4 overflow-hidden">
+                <img id="detail-cover" src="" alt="Cover" class="w-full max-w-[200px] md:max-w-full h-auto object-contain rounded-xl shadow-lg relative z-10">
+            </div>
+            <div class="p-6 md:p-8 flex-1 flex flex-col overflow-y-auto">
+                <span id="detail-type" class="inline-block px-3 py-1 bg-red-100 text-besti-red font-bold text-[10px] rounded-full mb-3 w-max uppercase tracking-wider"></span>
+                <h2 id="detail-title" class="text-2xl font-black text-gray-900 mb-3 leading-tight"></h2>
+                <div class="flex flex-wrap gap-x-4 gap-y-2 mb-5">
+                    <span class="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded flex items-center gap-1.5"><i class="fas fa-user-edit text-gray-400"></i> <span id="detail-author"></span></span>
+                    <span class="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded flex items-center gap-1.5"><i class="fas fa-barcode text-gray-400"></i> <span id="detail-isbn"></span></span>
+                    <span class="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded flex items-center gap-1.5"><i class="far fa-file-alt text-gray-400"></i> <span id="detail-pages"></span></span>
+                </div>
+                <div class="mb-6 flex-1">
+                    <h4 class="text-xs font-bold text-gray-800 mb-2 uppercase tracking-wider border-b border-gray-100 pb-2">Deskripsi / Sinopsis</h4>
+                    <p id="detail-desc" class="text-sm text-gray-600 leading-relaxed text-justify"></p>
+                </div>
+                <button id="btn-read-book" class="w-full mt-auto bg-besti-red hover:bg-red-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <i class="fas fa-book-reader"></i> BACA SEKARANG
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Buku Admin -->
+    <div id="edit-book-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-edit text-blue-500"></i> Edit Detail Buku</h2>
+                <button onclick="closeEditBookModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <input type="hidden" id="edit-book-id">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Judul Buku <span class="text-red-500">*</span></label>
+                    <input type="text" id="edit-book-title" class="w-full bg-white text-gray-900 text-sm rounded-lg p-3 border border-gray-300 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">ISBN</label>
+                        <input type="text" id="edit-book-isbn" class="w-full bg-white text-gray-900 text-sm rounded-lg p-2.5 border border-gray-300 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Jml Halaman</label>
+                        <input type="number" id="edit-book-pages" class="w-full bg-white text-gray-900 text-sm rounded-lg p-2.5 border border-gray-300 outline-none">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Penulis / Penerbit</label>
+                    <input type="text" id="edit-book-author" class="w-full bg-white text-gray-900 text-sm rounded-lg p-2.5 border border-gray-300 outline-none">
+                </div>
+                <div class="mb-2">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi Buku</label>
+                    <textarea id="edit-book-desc" rows="4" class="w-full bg-white text-gray-900 text-sm rounded-lg p-3 border border-gray-300 outline-none"></textarea>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeEditBookModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold text-gray-600 border border-gray-300">Batal</button>
+                <button id="btn-submit-edit-book" onclick="submitEditBook()" class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-blue-500 hover:bg-blue-600 shadow-md">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Buku -->
+    <div id="add-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-plus-circle text-besti-red"></i> Tambah Buku Baru</h2>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Judul Buku *</label>
+                    <input type="text" id="book-title" class="w-full bg-white text-gray-900 text-sm rounded-lg p-3 border border-gray-300">
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">ISBN</label>
+                        <input type="text" id="book-isbn" class="w-full bg-white text-gray-900 text-sm rounded-lg p-2.5 border border-gray-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Jml Halaman</label>
+                        <input type="number" id="book-pages" class="w-full bg-white text-gray-900 text-sm rounded-lg p-2.5 border border-gray-300">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Penulis</label>
+                    <input type="text" id="book-author" class="w-full bg-white text-gray-900 text-sm rounded-lg p-2.5 border border-gray-300">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi</label>
+                    <textarea id="book-desc" rows="3" class="w-full bg-white text-gray-900 text-sm rounded-lg p-3 border border-gray-300"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Upload Cover Gambar *</label>
+                    <input type="file" id="book-cover-file" accept="image/*" class="w-full text-sm border border-gray-200 rounded-lg p-1 bg-white">
+                </div>
+                <div class="mb-4 p-4 border border-gray-200 rounded-xl bg-gray-50">
+                    <label class="block text-xs font-bold text-gray-700 mb-3">Format Konten *</label>
+                    <div class="flex gap-4 mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-medium"><input type="radio" name="book-type" value="pdf" checked onchange="toggleBookType()" class="accent-besti-red w-4 h-4"> Upload PDF</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-medium"><input type="radio" name="book-type" value="link" onchange="toggleBookType()" class="accent-besti-red w-4 h-4"> Link URL</label>
+                    </div>
+                    <div id="type-pdf-container"><input type="file" id="book-pdf-file" accept="application/pdf" class="w-full text-sm border border-gray-200 rounded-lg p-1"></div>
+                    <div id="type-link-container" class="hidden"><input type="url" id="book-link-url" placeholder="https://..." class="w-full text-sm rounded-lg p-2.5 border border-gray-300"></div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeAddModal()" class="px-5 py-2.5 rounded-lg text-sm font-bold border border-gray-300 bg-white">Batal</button>
+                <button id="btn-submit-book" onclick="submitBook()" class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-besti-red hover:bg-red-700">Simpan Buku</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ulasan Pengunjung (Bintang) -->
+    <div id="ulasan-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-100">
+            <div class="p-5 border-b border-gray-100 flex justify-between bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-star text-yellow-400"></i> Ulasan Aplikasi</h2>
+                <button onclick="closeUlasanModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4 flex flex-col items-center border-b border-gray-100 pb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-2">Beri Nilai</label>
+                    <div class="flex gap-2 text-3xl cursor-pointer" id="star-rating-input">
+                        <i class="fas fa-star text-yellow-400 transition-colors" onclick="setRating(1)"></i>
+                        <i class="fas fa-star text-yellow-400 transition-colors" onclick="setRating(2)"></i>
+                        <i class="fas fa-star text-yellow-400 transition-colors" onclick="setRating(3)"></i>
+                        <i class="fas fa-star text-yellow-400 transition-colors" onclick="setRating(4)"></i>
+                        <i class="fas fa-star text-yellow-400 transition-colors" onclick="setRating(5)"></i>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Anda *</label>
+                    <input type="text" id="ulasan-name" class="w-full bg-white text-sm rounded-lg p-3 border border-gray-300">
+                </div>
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Kesan *</label>
+                    <textarea id="ulasan-desc" rows="4" class="w-full bg-white text-sm rounded-lg p-3 border border-gray-300"></textarea>
+                </div>
+                <button id="btn-submit-ulasan" onclick="submitUlasan()" class="w-full py-3 bg-besti-red hover:bg-red-700 text-white font-bold rounded-lg text-sm">Kirim Ulasan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Testimoni MGM (Sidebar - Tanpa Bintang) -->
+    <div id="testimoni-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-100">
+            <div class="p-5 border-b border-gray-100 flex justify-between bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-comment-dots text-besti-red"></i> Testimoni MGM</h2>
+                <button onclick="closeTestimoniModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Anda *</label>
+                    <input type="text" id="testimoni-name" class="w-full bg-white text-sm rounded-lg p-3 border border-gray-300">
+                </div>
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pesan *</label>
+                    <textarea id="testimoni-desc" rows="4" class="w-full bg-white text-sm rounded-lg p-3 border border-gray-300"></textarea>
+                </div>
+                <button id="btn-submit-testimoni" onclick="submitTestimoni()" class="w-full py-3 bg-besti-red text-white font-bold rounded-lg text-sm">Kirim Testimoni</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Pengembang -->
+    <div id="edit-author-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+            <h2 class="text-lg font-bold mb-4">Edit Pengembang</h2>
+            <input type="text" id="edit-author-name" class="w-full bg-white text-sm rounded-lg p-3 border border-gray-300 mb-4">
+            <textarea id="edit-author-desc" rows="4" class="w-full bg-white text-sm rounded-lg p-3 border border-gray-300 mb-4"></textarea>
+            <div class="flex gap-3">
+                <button onclick="closeEditAuthorModal()" class="flex-1 py-2 bg-gray-100 rounded-lg">Batal</button>
+                <button id="btn-submit-author" onclick="submitAuthor()" class="flex-1 py-2 bg-besti-red text-white font-bold rounded-lg">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Hapus Data -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl transform scale-95 transition-transform" id="delete-confirm-box">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Hapus Data Ini?</h3>
+            <p class="text-sm text-gray-500 mb-6">Tindakan ini permanen.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteConfirm()" class="flex-1 py-2.5 bg-gray-100 rounded-lg font-bold">Batal</button>
+                <button id="btn-confirm-delete" class="flex-1 py-2.5 bg-besti-red text-white rounded-lg font-bold">Ya, Hapus!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-[70] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg font-medium text-sm text-white">
+        <i id="toast-icon" class="fas fa-check-circle"></i><span id="toast-msg"></span>
+    </div>
+
+    <script>
+    
+    // Konfigurasi URL Backend API (URL Google Apps Script Web App yang baru di-deploy)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyA6yZta2k1-lB3zpK0zubEjos5IQUu697k1QWH-Q-qerbLg8lOxNIAyXeJ35POan2j/exec'; 
+
+    let isAdmin = false;
+    let currentDeleteAction = null; 
+    let globalBooks = []; 
+    let currentRating = 5;
+
+    // Fetch Helper
+    async function fetchAPI(action, payload = {}) {
+        payload.action = action;
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' }, // Hindari preflight CORS issues di Apps Script
+                body: JSON.stringify(payload)
+            });
+            return await response.json();
+        } catch (err) {
+            console.error("API Error:", err);
+            throw new Error("Terjadi kesalahan jaringan atau server.");
+        }
+    }
+
+    async function fetchGet(action) {
+        try {
+            const response = await fetch(API_URL + "?action=" + action);
+            return await response.json();
+        } catch (err) {
+            console.error("API GET Error:", err);
+            throw new Error("Terjadi kesalahan jaringan atau server.");
+        }
+    }
+
+    const api = {
+        getBooks: (onSuccess, onFail) => { fetchGet('getBooks').then(onSuccess).catch(onFail); },
+        addBook: (t, c, p, l, i, pg, a, d, onSuccess, onFail) => { fetchAPI('addBook', {title: t, coverObj: c, pdfObj: p, linkUrl: l, isbn: i, pages: pg, author: a, description: d}).then(onSuccess).catch(onFail); },
+        editBook: (id, t, i, pg, a, d, onSuccess, onFail) => { fetchAPI('editBook', {id, title: t, isbn: i, pages: pg, author: a, description: d}).then(onSuccess).catch(onFail); },
+        deleteBook: (id, onSuccess, onFail) => { fetchAPI('deleteBook', {id}).then(onSuccess).catch(onFail); },
+        getAuthor: (onSuccess, onFail) => { fetchGet('getAuthor').then(onSuccess).catch(onFail); },
+        updateAuthor: (n, d, onSuccess, onFail) => { fetchAPI('updateAuthor', {name: n, desc: d}).then(onSuccess).catch(onFail); },
+        getTestimoni: (onSuccess, onFail) => { fetchGet('getTestimoni').then(onSuccess).catch(onFail); },
+        addTestimoni: (n, d, onSuccess, onFail) => { fetchAPI('addTestimoni', {name: n, desc: d}).then(onSuccess).catch(onFail); },
+        deleteTestimoni: (id, onSuccess, onFail) => { fetchAPI('deleteTestimoni', {id}).then(onSuccess).catch(onFail); },
+        getUlasan: (onSuccess, onFail) => { fetchGet('getUlasan').then(onSuccess).catch(onFail); },
+        addUlasan: (n, r, d, onSuccess, onFail) => { fetchAPI('addUlasan', {name: n, rating: r, desc: d}).then(onSuccess).catch(onFail); },
+        deleteUlasan: (id, onSuccess, onFail) => { fetchAPI('deleteUlasan', {id}).then(onSuccess).catch(onFail); },
+        loginAdmin: (u, p, onSuccess, onFail) => { fetchAPI('login', {username: u, password: p}).then(onSuccess).catch(onFail); }
+    };
+ function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    window.onload = function() { loadBooks(); loadAuthor(); loadTestimoni(); loadUlasan(); };
+
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = msg;
+        t.className = `fixed bottom-5 right-5 transform transition-all duration-300 z-[70] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg font-medium text-sm text-white ${isError ? 'bg-red-600 translate-y-0 opacity-100' : 'bg-gray-900 translate-y-0 opacity-100'}`;
+        document.getElementById('toast-icon').className = isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle text-green-400';
+        setTimeout(() => { t.classList.add('translate-y-20', 'opacity-0'); t.classList.remove('translate-y-0', 'opacity-100'); }, 3000);
+    }
+    function showError(err) { showToast("Gagal memuat data: " + (typeof err === 'string' ? err : (err && err.message) || 'Terjadi kesalahan sistem'), true); console.error(err); }
+
+    function toggleBookType() {
+        const type = document.querySelector('input[name="book-type"]:checked').value;
+        if(type === 'pdf') { document.getElementById('type-pdf-container').classList.remove('hidden'); document.getElementById('type-link-container').classList.add('hidden'); } 
+        else { document.getElementById('type-pdf-container').classList.add('hidden'); document.getElementById('type-link-container').classList.remove('hidden'); }
+    }
+
+    function setRating(val) {
+        currentRating = val; const stars = document.getElementById('star-rating-input').children;
+        for(let i=0; i<5; i++) {
+            if(i < val) { stars[i].classList.remove('far', 'text-gray-300'); stars[i].classList.add('fas', 'text-yellow-400'); } 
+            else { stars[i].classList.remove('fas', 'text-yellow-400'); stars[i].classList.add('far', 'text-gray-300'); }
+        }
+    }
+
+    function loadAuthor() {
+        api.getAuthor((data) => {
+            if(data){
+                const names = data.name.split(',').map(n => n.trim()).filter(n => n);
+                document.getElementById('author-name-list').innerHTML = names.map(n => `<span class="bg-red-50 text-besti-red text-[10px] font-bold px-2.5 py-1 rounded-md border border-red-100">${n}</span>`).join('');
+                document.getElementById('author-desc').innerText = data.desc || '';
+                document.getElementById('edit-author-name').value = data.name; document.getElementById('edit-author-desc').value = data.desc;
+            }
+        });
+    }
+
+    function loadBooks() {
+        const grid = document.getElementById('books-grid');
+        grid.innerHTML = ''; grid.classList.add('hidden');
+        document.getElementById('books-loading').classList.remove('hidden');
+
+        api.getBooks((books) => {
+            globalBooks = books;
+            if(books && books.length > 0) {
+                const latest = books[0];
+                document.getElementById('hero-bg').src = getValidImageUrl(latest.coverUrl);
+                document.getElementById('hero-title').innerHTML = escapeHtml(latest.title);
+                document.getElementById('hero-desc').innerText = latest.description ? latest.description : 'Rilisan dokumen terbaru kami yang wajib Anda baca.';
+                document.getElementById('hero-btn').onclick = () => openBookDetail(latest.id);
+            }
+
+            if(books.length === 0) { grid.innerHTML = '<p class="col-span-full text-center text-gray-500">Belum ada buku tersedia.</p>'; }
+            else {
+                books.forEach((book) => {
+                    const safeId = escapeHtml(book.id);
+                    const actionBtns = isAdmin ? `
+                        <div class="absolute top-2 right-2 flex flex-col gap-2 z-30">
+                            <button onclick="event.stopPropagation(); triggerDeleteBook('${safeId}')" class="bg-white/90 hover:bg-red-50 text-besti-red w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-colors"><i class="fas fa-trash-alt text-sm"></i></button>
+                            <button onclick="event.stopPropagation(); openEditBookModal('${safeId}')" class="bg-white/90 hover:bg-blue-50 text-blue-500 w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-colors"><i class="fas fa-pen text-sm"></i></button>
+                        </div>
+                    ` : '';
+
+                    grid.innerHTML += `
+                        <div class="book-card relative rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-200 shadow-sm flex flex-col group hover:border-besti-red hover:shadow-lg transition-all duration-300" onclick="openBookDetail('${safeId}')">
+                            ${actionBtns}
+                            <div class="w-full aspect-[3/4] relative bg-gray-100 overflow-hidden shrink-0">
+                                <img src="${getValidImageUrl(book.coverUrl)}" alt="${escapeHtml(book.title)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/400x600/f3f4f6/dc2626?text=No+Cover'">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                    <i class="fas ${book.type === 'link' ? 'fa-external-link-alt' : 'fa-book-reader'} text-white text-5xl drop-shadow-lg scale-90 group-hover:scale-100 transition-transform duration-300"></i>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-1 bg-white">
+                                <h4 class="font-bold text-sm text-gray-900 line-clamp-2 leading-snug group-hover:text-besti-red transition-colors mb-3">${escapeHtml(book.title)}</h4>
+                                <div class="space-y-1.5 mt-auto">
+                                    <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="fas fa-barcode w-3 text-center"></i> <span class="truncate">${escapeHtml(book.isbn) || '-'}</span></p>
+                                    <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="far fa-file-alt w-3 text-center"></i> <span>${book.pages ? escapeHtml(book.pages) + ' Halaman' : '-'}</span></p>
+                                    <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="fas fa-user-edit w-3 text-center"></i> <span class="truncate">${escapeHtml(book.author) || '-'}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('books-loading').classList.add('hidden'); grid.classList.remove('hidden');
+        },
+        (err) => {
+            // FAILURE: matikan spinner + tampilkan penyebab asli agar TIDAK
+            // terlihat "macet" (gejala utama data tidak tampil).
+            document.getElementById('books-loading').classList.add('hidden');
+            grid.innerHTML = '<p class="col-span-full text-center text-red-500">Gagal memuat buku: ' + escapeHtml(typeof err === 'string' ? err : (err && err.message) || 'Cek koneksi / izin deploy / URL /exec') + '</p>';
+            grid.classList.remove('hidden');
+        });
+    }
+
+    function loadTestimoni() {
+        api.getTestimoni((data) => {
+            const list = document.getElementById('testimoni-list');
+            if(!data || data.length === 0){ list.innerHTML = '<p class="text-[11px] text-gray-500 italic text-center">Belum ada testimoni.</p>'; return; }
+            list.innerHTML = '';
+            data.forEach(t => {
+                const delBtn = isAdmin ? `<button onclick="triggerDeleteTestimoni('${escapeHtml(t.id)}')" class="text-gray-400 hover:text-red-500 ml-2"><i class="fas fa-trash-alt"></i></button>` : '';
+                list.innerHTML += `
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 relative mb-3">
+                        <div class="flex justify-between items-start mb-1"><span class="font-bold text-xs text-gray-800">${escapeHtml(t.name)}</span><div class="flex items-center"><span class="text-[9px] text-gray-400">${escapeHtml(t.date)}</span> ${delBtn}</div></div>
+                        <p class="text-[11px] text-gray-600 italic">"${escapeHtml(t.desc)}"</p>
+                    </div>`;
+            });
+        }, (err) => {
+            const list = document.getElementById('testimoni-list');
+            list.innerHTML = '<p class="text-[11px] text-red-500 italic text-center">Gagal memuat testimoni: ' + escapeHtml(typeof err === 'string' ? err : (err && err.message) || 'Cek koneksi/izin deploy') + '</p>';
+        });
+    }
+
+    function loadUlasan() {
+        api.getUlasan((data) => {
+            const grid = document.getElementById('app-reviews-grid');
+            if(!data || data.length === 0){ grid.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Jadilah yang pertama memberikan ulasan!</p>'; return; }
+            grid.innerHTML = '';
+            data.forEach(t => {
+                let starsHTML = '';
+                for(let i=1; i<=5; i++) { starsHTML += `<i class="${i <= (t.rating||5) ? 'fas text-yellow-400' : 'far text-gray-300'} fa-star text-[10px]"></i>`; }
+                const delBtn = isAdmin ? `<button onclick="triggerDeleteUlasan('${escapeHtml(t.id)}')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-white w-8 h-8 rounded-full shadow-sm border border-gray-100 flex items-center justify-center transition-colors z-10"><i class="fas fa-trash-alt text-xs"></i></button>` : '';
+                const initial = t.name ? escapeHtml(t.name.charAt(0).toUpperCase()) : 'U';
+
+                grid.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative h-full flex flex-col group">
+                        ${delBtn}
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-red-50 text-besti-red flex items-center justify-center font-black text-xl shrink-0">${initial}</div>
+                            <div class="flex flex-col">
+                                <h4 class="font-bold text-sm text-gray-900">${escapeHtml(t.name)}</h4>
+                                <div class="flex gap-0.5 mt-1">${starsHTML}</div>
+                                <span class="text-[10px] text-gray-400 font-medium mt-1">${escapeHtml(t.date)}</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-100 relative mt-auto">
+                            <i class="fas fa-quote-left absolute top-3 right-3 text-gray-200 text-2xl opacity-50"></i>
+                            <p class="text-sm text-gray-600 leading-relaxed italic relative z-10">"${escapeHtml(t.desc)}"</p>
+                        </div>
+                    </div>`;
+            });
+        }, (err) => {
+            const grid = document.getElementById('app-reviews-grid');
+            grid.innerHTML = '<p class="text-sm text-red-500 italic col-span-full">Gagal memuat ulasan: ' + escapeHtml(typeof err === 'string' ? err : (err && err.message) || 'Cek koneksi/izin deploy') + '</p>';
+        });
+    }
+
+    function openBookDetail(id) {
+        const book = globalBooks.find(b => String(b.id) === String(id)); if(!book) return;
+        document.getElementById('detail-cover').src = getValidImageUrl(book.coverUrl);
+        document.getElementById('detail-title').innerText = book.title;
+        document.getElementById('detail-type').innerText = book.type === 'link' ? 'LINK EKSTERNAL' : 'E-BOOK PDF';
+        document.getElementById('detail-isbn').innerText = book.isbn || '-';
+        document.getElementById('detail-pages').innerText = book.pages ? book.pages + ' Hlm' : '-';
+        document.getElementById('detail-author').innerText = book.author || '-';
+        document.getElementById('detail-desc').innerText = book.description || 'Tidak ada deskripsi.';
+        
+        const readBtn = document.getElementById('btn-read-book');
+        readBtn.onclick = () => {
+            if(book.type === 'pdf') {
+                openFlipbook(book.heyzineUrl); // heyzineUrl contains the direct drive url in the new backend
+            } else {
+                window.open(book.heyzineUrl, '_blank');
+            }
+        };
+        
+        const m = document.getElementById('book-detail-modal'); m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10);
+    }
+    
+    function openFlipbook(pdfUrl) {
+        // Karena CORS Drive bisa membatasi PDF.js, gunakan proxy ringan jika diperlukan, 
+        // tapi dflip kadang bisa read direct. Jika error CORS, bisa ditambahkan prefix proxy.
+        // Contoh prefix proxy (opsional): 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl)
+        
+        let targetUrl = pdfUrl;
+        
+        // Hapus elemen viewer lama dan buat ulang agar dflip me-render buku baru
+        const container = document.getElementById('flipbook-container');
+        container.innerHTML = '<div class="_df_book" id="dflip-viewer" source="'+targetUrl+'"></div>';
+        
+        // Inisialisasi ulang DFlip viewer (jQuery plugin)
+        if(window.DFLIP) {
+            window.DFLIP.parseBooks();
+        }
+
+        const m = document.getElementById('flipbook-modal'); 
+        m.classList.remove('hidden'); 
+        setTimeout(() => m.classList.remove('opacity-0'), 10);
+    }
+
+    function closeFlipbook() {
+        const m = document.getElementById('flipbook-modal'); 
+        m.classList.add('opacity-0'); 
+        setTimeout(() => { m.classList.add('hidden'); document.getElementById('flipbook-container').innerHTML = ''; }, 300);
+    }
+    
+    function closeBookDetail() { const m = document.getElementById('book-detail-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+
+    function openAddModal() { const m = document.getElementById('add-modal'); m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); }
+    function closeAddModal() { const m = document.getElementById('add-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+    
+    function openEditBookModal(id) {
+        const book = globalBooks.find(b => String(b.id) === String(id)); if(!book) return;
+        document.getElementById('edit-book-id').value = book.id; document.getElementById('edit-book-title').value = book.title;
+        document.getElementById('edit-book-isbn').value = book.isbn || ''; document.getElementById('edit-book-pages').value = book.pages || '';
+        document.getElementById('edit-book-author').value = book.author || ''; document.getElementById('edit-book-desc').value = book.description || '';
+        const m = document.getElementById('edit-book-modal'); m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10);
+    }
+    function closeEditBookModal() { const m = document.getElementById('edit-book-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+    
+    function openTestimoniModal() { const m = document.getElementById('testimoni-modal'); m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); }
+    function closeTestimoniModal() { const m = document.getElementById('testimoni-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+    
+    function openUlasanModal() { const m = document.getElementById('ulasan-modal'); m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); }
+    function closeUlasanModal() { const m = document.getElementById('ulasan-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+    
+    function openEditAuthorModal() { const m = document.getElementById('edit-author-modal'); m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); }
+    function closeEditAuthorModal() { const m = document.getElementById('edit-author-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+
+    function getBase64(file) { return new Promise((res, rej) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => res(reader.result.split(',')[1]); reader.onerror = error => rej(error); }); }
+
+    async function submitBook() {
+        const title = document.getElementById('book-title').value; const isbn = document.getElementById('book-isbn').value;
+        const pages = document.getElementById('book-pages').value; const author = document.getElementById('book-author').value;
+        const description = document.getElementById('book-desc').value; const coverInput = document.getElementById('book-cover-file');
+        const type = document.querySelector('input[name="book-type"]:checked').value; const pdfInput = document.getElementById('book-pdf-file');
+        let linkUrl = document.getElementById('book-link-url').value;
+        
+        if(!title || !coverInput.files[0]) return showToast("Judul dan Cover Wajib diisi!", true);
+        if(type === 'pdf' && !pdfInput.files[0]) return showToast("File PDF Wajib diupload!", true);
+        if(type === 'link' && !linkUrl) return showToast("Link URL Wajib diisi!", true);
+
+        const btn = document.getElementById('btn-submit-book'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true;
+
+        try {
+            const coverFile = coverInput.files[0]; const coverBase64 = await getBase64(coverFile);
+            const coverObj = { data: coverBase64, name: coverFile.name, mimeType: coverFile.type };
+            let pdfObj = null;
+            if (type === 'pdf') { const pdfFile = pdfInput.files[0]; const pdfBase64 = await getBase64(pdfFile); pdfObj = { data: pdfBase64, name: pdfFile.name, mimeType: pdfFile.type }; linkUrl = null; }
+            
+            api.addBook(title, coverObj, pdfObj, linkUrl, isbn, pages, author, description, (res) => {
+                if(res.success) {
+                    showToast(res.message); closeAddModal(); loadBooks(); 
+                    document.getElementById('book-title').value = ''; document.getElementById('book-desc').value = '';
+                    document.getElementById('book-isbn').value = ''; document.getElementById('book-pages').value = ''; document.getElementById('book-author').value = '';
+                    coverInput.value = ''; pdfInput.value = ''; document.getElementById('book-link-url').value = '';
+                } else { showToast(res.message, true); }
+                btn.innerHTML = 'Simpan Buku'; btn.disabled = false;
+            }, (err) => {
+                showToast('Gagal menambahkan: ' + (typeof err === 'string' ? err : (err && err.message) || 'error'), true);
+                btn.innerHTML = 'Simpan Buku'; btn.disabled = false;
+            });
+        } catch (error) { showToast("Gagal memproses file", true); btn.innerHTML = 'Simpan Buku'; btn.disabled = false; }
+    }
+
+    function submitEditBook() {
+        // ID kini berupa string (UUID) - jangan di-parseInt.
+        const id = String(document.getElementById('edit-book-id').value);
+        const title = document.getElementById('edit-book-title').value; const isbn = document.getElementById('edit-book-isbn').value; 
+        const pages = document.getElementById('edit-book-pages').value; const author = document.getElementById('edit-book-author').value; 
+        const description = document.getElementById('edit-book-desc').value;
+        if(!title) return showToast("Judul Wajib!", true);
+        
+        const btn = document.getElementById('btn-submit-edit-book'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true;
+        api.editBook(id, title, isbn, pages, author, description, (res) => {
+            if(res.success) { showToast(res.message); closeEditBookModal(); loadBooks(); } else { showToast(res.message, true); }
+            btn.innerHTML = 'Simpan'; btn.disabled = false;
+        }, (err) => {
+            showToast('Gagal menyimpan: ' + (typeof err === 'string' ? err : (err && err.message) || 'error'), true);
+            btn.innerHTML = 'Simpan'; btn.disabled = false;
+        });
+    }
+
+    function submitAuthor() {
+        const name = document.getElementById('edit-author-name').value; const desc = document.getElementById('edit-author-desc').value;
+        const btn = document.getElementById('btn-submit-author'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...'; btn.disabled = true;
+        api.updateAuthor(name, desc, (res) => { if(res.success){ showToast(res.message); closeEditAuthorModal(); loadAuthor(); } btn.innerHTML = 'Simpan'; btn.disabled = false; }, (err) => { showToast('Gagal menyimpan profil: ' + (typeof err === 'string' ? err : (err && err.message) || 'error'), true); btn.innerHTML = 'Simpan'; btn.disabled = false; });
+    }
+
+    function submitTestimoni() {
+        const name = document.getElementById('testimoni-name').value; const desc = document.getElementById('testimoni-desc').value;
+        if(!name || !desc) return showToast("Isi semua data!", true);
+        const btn = document.getElementById('btn-submit-testimoni'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...'; btn.disabled = true;
+        api.addTestimoni(name, desc, (res) => {
+            if(res.success){ showToast(res.message); closeTestimoniModal(); loadTestimoni(); document.getElementById('testimoni-name').value=''; document.getElementById('testimoni-desc').value=''; }
+            btn.innerHTML = 'Kirim Testimoni'; btn.disabled = false;
+        }, (err) => { showToast('Gagal mengirim testimoni: ' + (typeof err === 'string' ? err : (err && err.message) || 'error'), true); btn.innerHTML = 'Kirim Testimoni'; btn.disabled = false; });
+    }
+
+    function submitUlasan() {
+        const name = document.getElementById('ulasan-name').value; const desc = document.getElementById('ulasan-desc').value;
+        if(!name || !desc) return showToast("Isi semua data!", true);
+        const btn = document.getElementById('btn-submit-ulasan'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...'; btn.disabled = true;
+        api.addUlasan(name, currentRating, desc, (res) => {
+            if(res.success){ showToast(res.message); closeUlasanModal(); loadUlasan(); document.getElementById('ulasan-name').value=''; document.getElementById('ulasan-desc').value=''; setRating(5); }
+            btn.innerHTML = 'Kirim Ulasan'; btn.disabled = false;
+        }, (err) => { showToast('Gagal mengirim ulasan: ' + (typeof err === 'string' ? err : (err && err.message) || 'error'), true); btn.innerHTML = 'Kirim Ulasan'; btn.disabled = false; });
+    }
+
+    function openDeleteConfirm(actionFn) {
+        currentDeleteAction = actionFn; const modal = document.getElementById('delete-confirm-modal'); const box = document.getElementById('delete-confirm-box');
+        modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
+        document.getElementById('btn-confirm-delete').onclick = () => { const btn = document.getElementById('btn-confirm-delete'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true; if(currentDeleteAction) currentDeleteAction(); };
+    }
+    function closeDeleteConfirm() {
+        const modal = document.getElementById('delete-confirm-modal'); const box = document.getElementById('delete-confirm-box');
+        modal.classList.add('opacity-0'); box.classList.add('scale-95');
+        setTimeout(() => { modal.classList.add('hidden'); const btn = document.getElementById('btn-confirm-delete'); btn.innerHTML = 'Ya, Hapus!'; btn.disabled = false; }, 300);
+    }
+
+    function triggerDeleteBook(id) { openDeleteConfirm(() => { api.deleteBook(id, (res) => { closeDeleteConfirm(); if(res.success) { showToast(res.message); loadBooks(); } }); }); }
+    function triggerDeleteTestimoni(id) { openDeleteConfirm(() => { api.deleteTestimoni(id, (res) => { closeDeleteConfirm(); if(res.success) { showToast(res.message); loadTestimoni(); } }); }); }
+    function triggerDeleteUlasan(id) { openDeleteConfirm(() => { api.deleteUlasan(id, (res) => { closeDeleteConfirm(); if(res.success) { showToast(res.message); loadUlasan(); } }); }); }
+
+    function loginAdmin() {
+        const u = document.getElementById('admin-user').value; const p = document.getElementById('admin-pass').value;
+        if(u === 'admin' && p === 'guruawal2026') {
+            isAdmin = true;
+            document.getElementById('admin-login-panel').classList.add('hidden'); document.getElementById('admin-active-panel').classList.remove('hidden'); document.getElementById('btn-edit-pengembang').classList.remove('hidden');
+            showToast("Login Admin Berhasil!"); document.getElementById('admin-user').value = ''; document.getElementById('admin-pass').value = ''; loadBooks(); loadTestimoni(); loadUlasan();
+        } else { showToast("Username / Password salah!", true); }
+    }
+    function logoutAdmin() {
+        isAdmin = false;
+        document.getElementById('admin-login-panel').classList.remove('hidden'); document.getElementById('admin-active-panel').classList.add('hidden'); document.getElementById('btn-edit-pengembang').classList.add('hidden');
+        showToast("Logout Berhasil!"); loadBooks(); loadTestimoni(); loadUlasan();
+    }
+    </script>
+</body>
+</html>
