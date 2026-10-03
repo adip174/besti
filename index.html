@@ -418,6 +418,15 @@
         deleteUlasan: (id, onSuccess, onFail) => { fetchAPI('deleteUlasan', {id}).then(onSuccess).catch(onFail); },
         loginAdmin: (u, p, onSuccess, onFail) => { fetchAPI('login', {username: u, password: p}).then(onSuccess).catch(onFail); }
     };
+    function getValidImageUrl(url) {
+        if (!url) return 'https://placehold.co/400x600/f3f4f6/dc2626?text=No+Cover';
+        if (url.includes('drive.google.com') && url.includes('uc?export=download')) {
+            const match = url.match(/id=([^&]+)/);
+            if (match && match[1]) { return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`; }
+        }
+        return url;
+    }
+
  function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str).replace(/[&<>"']/g, function (c) {
@@ -597,8 +606,7 @@
         // Karena CORS Drive bisa membatasi PDF.js, gunakan proxy ringan jika diperlukan, 
         // tapi dflip kadang bisa read direct. Jika error CORS, bisa ditambahkan prefix proxy.
         // Contoh prefix proxy (opsional): 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl)
-        
-        let targetUrl = pdfUrl;
+        let targetUrl = 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl);
         
         // Hapus elemen viewer lama dan buat ulang agar dflip me-render buku baru
         const container = document.getElementById('flipbook-container');
