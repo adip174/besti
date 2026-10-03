@@ -30,7 +30,11 @@
         }
     </style>
 
-
+    <!-- DearFlip CSS & JS -->
+    <link href="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/css/dflip.min.css" rel="stylesheet" type="text/css">
+    <link href="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/css/themify-icons.min.css" rel="stylesheet" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/js/dflip.min.js"></script>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
@@ -412,7 +416,8 @@
         getUlasan: (onSuccess, onFail) => { fetchGet('getUlasan').then(onSuccess).catch(onFail); },
         addUlasan: (n, r, d, onSuccess, onFail) => { fetchAPI('addUlasan', {name: n, rating: r, desc: d}).then(onSuccess).catch(onFail); },
         deleteUlasan: (id, onSuccess, onFail) => { fetchAPI('deleteUlasan', {id}).then(onSuccess).catch(onFail); },
-        loginAdmin: (u, p, onSuccess, onFail) => { fetchAPI('login', {username: u, password: p}).then(onSuccess).catch(onFail); }
+        loginAdmin: (u, p, onSuccess, onFail) => { fetchAPI('login', {username: u, password: p}).then(onSuccess).catch(onFail); },
+        getPdfBase64: (fileId, onSuccess, onFail) => { fetchAPI('getPdfBase64', {fileId: fileId}).then(onSuccess).catch(onFail); }
     };
     function getValidImageUrl(url) {
         if (!url) return 'https://placehold.co/400x600/f3f4f6/dc2626?text=No+Cover';
@@ -593,7 +598,9 @@
                 if (pUrl.includes('heyzine.com/api1?pdf=')) {
                     pUrl = decodeURIComponent(pUrl.split('pdf=')[1]);
                 }
-                openFlipbook(pUrl); // heyzineUrl contains the direct drive url in the new backend
+                const match = pUrl.match(/id=([^&]+)/);
+                const fileId = match ? match[1] : null;
+                openFlipbook(fileId, pUrl); 
             } else {
                 window.open(book.heyzineUrl, '_blank');
             }
@@ -602,25 +609,43 @@
         const m = document.getElementById('book-detail-modal'); m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10);
     }
     
-    function openFlipbook(pdfUrl) {
-        // Karena Google Drive memblokir akses CORS proxy (403 Forbidden) untuk dflip/pdf.js,
-        // kita menggunakan iframe yang mengarah ke Heyzine Flipbook API atau penampil eksternal
-        // yang dapat membypass batasan tersebut dengan aman.
-        
-        let targetUrl = pdfUrl;
-        
-        // Jika URL adalah Google Drive mentah, kita konversi on-the-fly ke Heyzine agar menjadi flipbook.
-        // Jika sudah Heyzine, biarkan.
-        if(targetUrl.includes('drive.google.com') && targetUrl.includes('uc?export=download')) {
-            targetUrl = "https://heyzine.com/api1?pdf=" + encodeURIComponent(targetUrl);
-        }
-
-        const container = document.getElementById('flipbook-container');
-        container.innerHTML = '<iframe src="' + targetUrl + '" class="w-full h-full border-0 rounded-xl" allowfullscreen="true" scrolling="no"></iframe>';
-        
+    function openFlipbook(fileId, pdfUrl) {
         const m = document.getElementById('flipbook-modal'); 
         m.classList.remove('hidden'); 
         setTimeout(() => m.classList.remove('opacity-0'), 10);
+        
+        const container = document.getElementById('flipbook-container');
+        container.innerHTML = '<div class="w-full h-full flex flex-col items-center justify-center text-white"><i class="fas fa-spinner fa-spin text-4xl mb-4"></i><p>Sedang memuat buku...</p></div>';
+
+        if (fileId) {
+            api.getPdfBase64(fileId, (res) => {
+                if (res.success) {
+                    const byteCharacters = atob(res.base64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], {type: 'application/pdf'});
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    container.innerHTML = '<div id="dflip-viewer" style="height: 100%; width: 100%;"></div>';
+                    if(window.jQuery && window.jQuery.fn.flipBook) {
+                        window.jQuery('#dflip-viewer').flipBook(blobUrl, { height: '100%', webgl: true });
+                    }
+                } else {
+                    container.innerHTML = '<div class="w-full h-full flex items-center justify-center text-white"><p>Gagal memuat PDF: ' + escapeHtml(res.message) + '</p></div>';
+                }
+            }, (err) => {
+                container.innerHTML = '<div class="w-full h-full flex items-center justify-center text-white"><p>Koneksi terputus.</p></div>';
+            });
+        } else {
+            // Fallback for non-drive URLs
+            container.innerHTML = '<div id="dflip-viewer" style="height: 100%; width: 100%;"></div>';
+            if(window.jQuery && window.jQuery.fn.flipBook) {
+                window.jQuery('#dflip-viewer').flipBook(pdfUrl, { height: '100%', webgl: true });
+            }
+        }
     }
 
     function closeFlipbook() {
