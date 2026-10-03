@@ -30,11 +30,7 @@
         }
     </style>
 
-    <!-- DearFlip CSS & JS -->
-    <link href="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/css/dflip.min.css" rel="stylesheet" type="text/css">
-    <link href="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/css/themify-icons.min.css" rel="stylesheet" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://unpkg.com/@dearflip/dearflip-jquery-flipbook@1.7.3/dflip/js/dflip.min.js"></script>
+
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
@@ -607,20 +603,21 @@
     }
     
     function openFlipbook(pdfUrl) {
-        // Karena CORS Drive bisa membatasi PDF.js, gunakan proxy ringan jika diperlukan, 
-        // tapi dflip kadang bisa read direct. Jika error CORS, bisa ditambahkan prefix proxy.
-        // Contoh prefix proxy (opsional): 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl)
-        let targetUrl = 'https://corsproxy.io/?' + encodeURIComponent(pdfUrl);
+        // Karena Google Drive memblokir akses CORS proxy (403 Forbidden) untuk dflip/pdf.js,
+        // kita menggunakan iframe yang mengarah ke Heyzine Flipbook API atau penampil eksternal
+        // yang dapat membypass batasan tersebut dengan aman.
         
-        // Hapus elemen viewer lama dan buat ulang agar dflip me-render buku baru
-        const container = document.getElementById('flipbook-container');
-        container.innerHTML = '<div id="dflip-viewer" style="height: 100%; width: 100%;"></div>';
+        let targetUrl = pdfUrl;
         
-        // Inisialisasi ulang DFlip viewer (jQuery plugin)
-        if(window.jQuery && window.jQuery.fn.flipBook) {
-            window.jQuery('#dflip-viewer').flipBook(targetUrl, { height: '100%', webgl: true });
+        // Jika URL adalah Google Drive mentah, kita konversi on-the-fly ke Heyzine agar menjadi flipbook.
+        // Jika sudah Heyzine, biarkan.
+        if(targetUrl.includes('drive.google.com') && targetUrl.includes('uc?export=download')) {
+            targetUrl = "https://heyzine.com/api1?pdf=" + encodeURIComponent(targetUrl);
         }
 
+        const container = document.getElementById('flipbook-container');
+        container.innerHTML = '<iframe src="' + targetUrl + '" class="w-full h-full border-0 rounded-xl" allowfullscreen="true" scrolling="no"></iframe>';
+        
         const m = document.getElementById('flipbook-modal'); 
         m.classList.remove('hidden'); 
         setTimeout(() => m.classList.remove('opacity-0'), 10);
