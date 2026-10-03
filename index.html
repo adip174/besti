@@ -593,7 +593,11 @@
         const readBtn = document.getElementById('btn-read-book');
         readBtn.onclick = () => {
             if(book.type === 'pdf') {
-                openFlipbook(book.heyzineUrl); // heyzineUrl contains the direct drive url in the new backend
+                let pUrl = book.heyzineUrl;
+                if (pUrl.includes('heyzine.com/api1?pdf=')) {
+                    pUrl = decodeURIComponent(pUrl.split('pdf=')[1]);
+                }
+                openFlipbook(pUrl); // heyzineUrl contains the direct drive url in the new backend
             } else {
                 window.open(book.heyzineUrl, '_blank');
             }
@@ -610,11 +614,11 @@
         
         // Hapus elemen viewer lama dan buat ulang agar dflip me-render buku baru
         const container = document.getElementById('flipbook-container');
-        container.innerHTML = '<div class="_df_book" id="dflip-viewer" source="'+targetUrl+'"></div>';
+        container.innerHTML = '<div id="dflip-viewer" style="height: 100%; width: 100%;"></div>';
         
         // Inisialisasi ulang DFlip viewer (jQuery plugin)
-        if(window.DFLIP) {
-            window.DFLIP.parseBooks();
+        if(window.jQuery && window.jQuery.fn.flipBook) {
+            window.jQuery('#dflip-viewer').flipBook(targetUrl, { height: '100%', webgl: true });
         }
 
         const m = document.getElementById('flipbook-modal'); 
