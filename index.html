@@ -48,6 +48,18 @@
         </div>
 
         <div class="p-6 md:p-8 flex-1 overflow-y-auto scrollbar-hide space-y-8">
+            <!-- Statistik -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm transition-all hover:border-red-100 grid grid-cols-2 gap-4 divide-x divide-gray-100 text-center">
+                <div class="flex flex-col">
+                    <span id="stat-readers" class="text-2xl font-black text-besti-red mb-1">...</span>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total Pengunjung</span>
+                </div>
+                <div class="flex flex-col">
+                    <span id="stat-books" class="text-2xl font-black text-besti-red mb-1">0</span>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Koleksi Buku</span>
+                </div>
+            </div>
+
             <!-- Tentang Pengembang -->
             <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative group transition-all hover:border-red-100">
                 <div id="btn-edit-pengembang" class="absolute top-3 right-3 hidden">
@@ -120,25 +132,7 @@
             </div>
         </div>
 
-        <!-- Statistik -->
-        <div class="relative z-20 -mt-8 mx-6 md:mx-12 max-w-5xl lg:mx-auto bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 grid grid-cols-2 md:grid-cols-4 gap-4 divide-x divide-gray-100 text-center">
-            <div class="flex flex-col">
-                <span id="stat-readers" class="text-3xl font-black text-gray-900 mb-1">12K+</span>
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pembaca Aktif</span>
-            </div>
-            <div class="flex flex-col">
-                <span id="stat-books" class="text-3xl font-black text-gray-900 mb-1">0</span>
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Koleksi Buku</span>
-            </div>
-            <div class="flex flex-col">
-                <span id="stat-rating" class="text-3xl font-black text-gray-900 mb-1">0.0</span>
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Rating</span>
-            </div>
-            <div class="flex flex-col">
-                <span class="text-3xl font-black text-gray-900 mb-1">24/7</span>
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Akses Gratis</span>
-            </div>
-        </div>
+
 
         <!-- Koleksi Buku Vertikal -->
         <div id="books-section" class="p-6 md:p-12 max-w-7xl mx-auto">
@@ -147,6 +141,7 @@
             <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 hidden">
                 <!-- Books dipasukkan dari JS -->
             </div>
+            <div id="books-pagination" class="flex justify-center mt-8 gap-2 hidden flex-wrap"></div>
         </div>
 
         <!-- Panel Ulasan Aplikasi Besar Bawah -->
@@ -163,6 +158,7 @@
             <div id="app-reviews-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Reviews dipasukkan dari JS -->
             </div>
+            <div id="ulasan-pagination" class="flex justify-center mt-8 gap-2 hidden flex-wrap"></div>
         </div>
 
         <footer class="bg-white border-t border-gray-200 p-6 md:p-12 shadow-sm">
@@ -391,7 +387,12 @@
     let isAdmin = false;
     let currentDeleteAction = null; 
     let globalBooks = []; 
+    let globalUlasan = [];
     let currentRating = 5;
+    let currentBookPage = 1;
+    const booksPerPage = 10;
+    let currentUlasanPage = 1;
+    const ulasanPerPage = 6;
 
     // Fetch Helper
     async function fetchAPI(action, payload = {}) {
@@ -519,47 +520,69 @@
                 document.getElementById('hero-btn').onclick = () => openBookDetail(latest.id);
             }
 
-            if(books.length === 0) { grid.innerHTML = '<p class="col-span-full text-center text-gray-500">Belum ada buku tersedia.</p>'; }
+            if(books.length === 0) { grid.innerHTML = '<p class="col-span-full text-center text-gray-500">Belum ada buku tersedia.</p>'; document.getElementById('books-loading').classList.add('hidden'); grid.classList.remove('hidden'); }
             else {
-                books.forEach((book) => {
-                    const safeId = escapeHtml(book.id);
-                    const actionBtns = isAdmin ? `
-                        <div class="absolute top-2 right-2 flex flex-col gap-2 z-30">
-                            <button onclick="event.stopPropagation(); triggerDeleteBook('${safeId}')" class="bg-white/90 hover:bg-red-50 text-besti-red w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-colors"><i class="fas fa-trash-alt text-sm"></i></button>
-                            <button onclick="event.stopPropagation(); openEditBookModal('${safeId}')" class="bg-white/90 hover:bg-blue-50 text-blue-500 w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-colors"><i class="fas fa-pen text-sm"></i></button>
-                        </div>
-                    ` : '';
-
-                    grid.innerHTML += `
-                        <div class="book-card relative rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-200 shadow-sm flex flex-col group hover:border-besti-red hover:shadow-lg transition-all duration-300" onclick="openBookDetail('${safeId}')">
-                            ${actionBtns}
-                            <div class="w-full aspect-[3/4] relative bg-gray-100 overflow-hidden shrink-0">
-                                <img src="${getValidImageUrl(book.coverUrl)}" alt="${escapeHtml(book.title)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/400x600/f3f4f6/dc2626?text=No+Cover'">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                    <i class="fas ${book.type === 'link' ? 'fa-external-link-alt' : 'fa-book-reader'} text-white text-5xl drop-shadow-lg scale-90 group-hover:scale-100 transition-transform duration-300"></i>
-                                </div>
-                            </div>
-                            <div class="p-4 flex flex-col flex-1 bg-white">
-                                <h4 class="font-bold text-sm text-gray-900 line-clamp-2 leading-snug group-hover:text-besti-red transition-colors mb-3">${escapeHtml(book.title)}</h4>
-                                <div class="space-y-1.5 mt-auto">
-                                    <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="fas fa-barcode w-3 text-center"></i> <span class="truncate">${escapeHtml(book.isbn) || '-'}</span></p>
-                                    <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="far fa-file-alt w-3 text-center"></i> <span>${book.pages ? escapeHtml(book.pages) + ' Halaman' : '-'}</span></p>
-                                    <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="fas fa-user-edit w-3 text-center"></i> <span class="truncate">${escapeHtml(book.author) || '-'}</span></p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
+                document.getElementById('books-loading').classList.add('hidden');
+                renderBooksPage(1);
             }
-            document.getElementById('books-loading').classList.add('hidden'); grid.classList.remove('hidden');
         },
         (err) => {
-            // FAILURE: matikan spinner + tampilkan penyebab asli agar TIDAK
-            // terlihat "macet" (gejala utama data tidak tampil).
             document.getElementById('books-loading').classList.add('hidden');
             grid.innerHTML = '<p class="col-span-full text-center text-red-500">Gagal memuat buku: ' + escapeHtml(typeof err === 'string' ? err : (err && err.message) || 'Cek koneksi / izin deploy / URL /exec') + '</p>';
             grid.classList.remove('hidden');
         });
+    }
+
+    function renderBooksPage(page) {
+        currentBookPage = page;
+        const grid = document.getElementById('books-grid');
+        const pagination = document.getElementById('books-pagination');
+        grid.innerHTML = '';
+        pagination.innerHTML = '';
+
+        const totalPages = Math.ceil(globalBooks.length / booksPerPage);
+        const start = (page - 1) * booksPerPage;
+        const booksToRender = globalBooks.slice(start, start + booksPerPage);
+
+        booksToRender.forEach((book) => {
+            const safeId = escapeHtml(book.id);
+            const actionBtns = isAdmin ? `
+                <div class="absolute top-2 right-2 flex flex-col gap-2 z-30">
+                    <button onclick="event.stopPropagation(); triggerDeleteBook('${safeId}')" class="bg-white/90 hover:bg-red-50 text-besti-red w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-colors"><i class="fas fa-trash-alt text-sm"></i></button>
+                    <button onclick="event.stopPropagation(); openEditBookModal('${safeId}')" class="bg-white/90 hover:bg-blue-50 text-blue-500 w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-colors"><i class="fas fa-pen text-sm"></i></button>
+                </div>
+            ` : '';
+
+            grid.innerHTML += `
+                <div class="book-card relative rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-200 shadow-sm flex flex-col group hover:border-besti-red hover:shadow-lg transition-all duration-300" onclick="openBookDetail('${safeId}')">
+                    ${actionBtns}
+                    <div class="w-full aspect-[3/4] relative bg-gray-100 overflow-hidden shrink-0">
+                        <img src="${getValidImageUrl(book.coverUrl)}" alt="${escapeHtml(book.title)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/400x600/f3f4f6/dc2626?text=No+Cover'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <i class="fas ${book.type === 'link' ? 'fa-external-link-alt' : 'fa-book-reader'} text-white text-5xl drop-shadow-lg scale-90 group-hover:scale-100 transition-transform duration-300"></i>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-1 bg-white">
+                        <h4 class="font-bold text-sm text-gray-900 line-clamp-2 leading-snug group-hover:text-besti-red transition-colors mb-3">${escapeHtml(book.title)}</h4>
+                        <div class="space-y-1.5 mt-auto">
+                            <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="fas fa-barcode w-3 text-center"></i> <span class="truncate">${escapeHtml(book.isbn) || '-'}</span></p>
+                            <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="far fa-file-alt w-3 text-center"></i> <span>${book.pages ? escapeHtml(book.pages) + ' Halaman' : '-'}</span></p>
+                            <p class="text-[10px] text-gray-500 flex items-center gap-1.5"><i class="fas fa-user-edit w-3 text-center"></i> <span class="truncate">${escapeHtml(book.author) || '-'}</span></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (totalPages > 1) {
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.innerHTML += `<button onclick="renderBooksPage(${i})" class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors shadow-sm ${i === page ? 'bg-besti-red text-white border-transparent' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-besti-red'}">${i}</button>`;
+            }
+            pagination.classList.remove('hidden');
+        } else {
+            pagination.classList.add('hidden');
+        }
+        grid.classList.remove('hidden');
     }
 
     function loadTestimoni() {
@@ -583,42 +606,63 @@
 
     function loadUlasan() {
         api.getUlasan((data) => {
-            if(data && data.length > 0) {
-                const totalRating = data.reduce((sum, t) => sum + (t.rating || 5), 0);
-                document.getElementById('stat-rating').innerText = (totalRating / data.length).toFixed(1);
-            } else {
-                document.getElementById('stat-rating').innerText = '0.0';
-            }
+            globalUlasan = data || [];
             const grid = document.getElementById('app-reviews-grid');
-            if(!data || data.length === 0){ grid.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Jadilah yang pertama memberikan ulasan!</p>'; return; }
-            grid.innerHTML = '';
-            data.forEach(t => {
-                let starsHTML = '';
-                for(let i=1; i<=5; i++) { starsHTML += `<i class="${i <= (t.rating||5) ? 'fas text-yellow-400' : 'far text-gray-300'} fa-star text-[10px]"></i>`; }
-                const delBtn = isAdmin ? `<button onclick="triggerDeleteUlasan('${escapeHtml(t.id)}')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-white w-8 h-8 rounded-full shadow-sm border border-gray-100 flex items-center justify-center transition-colors z-10"><i class="fas fa-trash-alt text-xs"></i></button>` : '';
-                const initial = t.name ? escapeHtml(t.name.charAt(0).toUpperCase()) : 'U';
-
-                grid.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative h-full flex flex-col group">
-                        ${delBtn}
-                        <div class="flex items-start gap-4 mb-4">
-                            <div class="w-12 h-12 rounded-full bg-red-50 text-besti-red flex items-center justify-center font-black text-xl shrink-0">${initial}</div>
-                            <div class="flex flex-col">
-                                <h4 class="font-bold text-sm text-gray-900">${escapeHtml(t.name)}</h4>
-                                <div class="flex gap-0.5 mt-1">${starsHTML}</div>
-                                <span class="text-[10px] text-gray-400 font-medium mt-1">${escapeHtml(t.date)}</span>
-                            </div>
-                        </div>
-                        <div class="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-100 relative mt-auto">
-                            <i class="fas fa-quote-left absolute top-3 right-3 text-gray-200 text-2xl opacity-50"></i>
-                            <p class="text-sm text-gray-600 leading-relaxed italic relative z-10">"${escapeHtml(t.desc)}"</p>
-                        </div>
-                    </div>`;
-            });
+            if(!globalUlasan || globalUlasan.length === 0){ 
+                grid.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Jadilah yang pertama memberikan ulasan!</p>'; 
+                document.getElementById('ulasan-pagination').classList.add('hidden');
+                return; 
+            }
+            renderUlasanPage(1);
         }, (err) => {
             const grid = document.getElementById('app-reviews-grid');
             grid.innerHTML = '<p class="text-sm text-red-500 italic col-span-full">Gagal memuat ulasan: ' + escapeHtml(typeof err === 'string' ? err : (err && err.message) || 'Cek koneksi/izin deploy') + '</p>';
         });
+    }
+
+    function renderUlasanPage(page) {
+        currentUlasanPage = page;
+        const grid = document.getElementById('app-reviews-grid');
+        const pagination = document.getElementById('ulasan-pagination');
+        grid.innerHTML = '';
+        pagination.innerHTML = '';
+
+        const totalPages = Math.ceil(globalUlasan.length / ulasanPerPage);
+        const start = (page - 1) * ulasanPerPage;
+        const ulasanToRender = globalUlasan.slice(start, start + ulasanPerPage);
+
+        ulasanToRender.forEach(t => {
+            let starsHTML = '';
+            for(let i=1; i<=5; i++) { starsHTML += `<i class="${i <= (t.rating||5) ? 'fas text-yellow-400' : 'far text-gray-300'} fa-star text-[10px]"></i>`; }
+            const delBtn = isAdmin ? `<button onclick="triggerDeleteUlasan('${escapeHtml(t.id)}')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-white w-8 h-8 rounded-full shadow-sm border border-gray-100 flex items-center justify-center transition-colors z-10"><i class="fas fa-trash-alt text-xs"></i></button>` : '';
+            const initial = t.name ? escapeHtml(t.name.charAt(0).toUpperCase()) : 'U';
+
+            grid.innerHTML += `
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative h-full flex flex-col group">
+                    ${delBtn}
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-full bg-red-50 text-besti-red flex items-center justify-center font-black text-xl shrink-0">${initial}</div>
+                        <div class="flex flex-col">
+                            <h4 class="font-bold text-sm text-gray-900">${escapeHtml(t.name)}</h4>
+                            <div class="flex gap-0.5 mt-1">${starsHTML}</div>
+                            <span class="text-[10px] text-gray-400 font-medium mt-1">${escapeHtml(t.date)}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-100 relative mt-auto">
+                        <i class="fas fa-quote-left absolute top-3 right-3 text-gray-200 text-2xl opacity-50"></i>
+                        <p class="text-sm text-gray-600 leading-relaxed italic relative z-10">"${escapeHtml(t.desc)}"</p>
+                    </div>
+                </div>`;
+        });
+
+        if (totalPages > 1) {
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.innerHTML += `<button onclick="renderUlasanPage(${i})" class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors shadow-sm ${i === page ? 'bg-besti-red text-white border-transparent' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-besti-red'}">${i}</button>`;
+            }
+            pagination.classList.remove('hidden');
+        } else {
+            pagination.classList.add('hidden');
+        }
     }
 
     function openBookDetail(id) {
