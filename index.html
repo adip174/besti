@@ -435,7 +435,8 @@
         deleteUlasan: (id, onSuccess, onFail) => { fetchAPI('deleteUlasan', {id}).then(onSuccess).catch(onFail); },
         loginAdmin: (u, p, onSuccess, onFail) => { fetchAPI('login', {username: u, password: p}).then(onSuccess).catch(onFail); },
         getPdfBase64: (fileId, onSuccess, onFail) => { fetchAPI('getPdfBase64', {fileId: fileId}).then(onSuccess).catch(onFail); },
-        hitVisitor: (onSuccess, onFail) => { fetchGet('hitVisitor').then(onSuccess).catch(onFail); }
+        hitVisitor: (onSuccess, onFail) => { fetchGet('hitVisitor').then(onSuccess).catch(onFail); },
+        getVisitor: (onSuccess, onFail) => { fetchGet('getVisitor').then(onSuccess).catch(onFail); }
     };
     function getValidImageUrl(url) {
         if (!url) return 'https://placehold.co/400x600/f3f4f6/dc2626?text=No+Cover';
@@ -456,8 +457,15 @@
     window.onload = function() { 
         loadBooks(); loadAuthor(); loadTestimoni(); loadUlasan(); 
         
-        // Hitungan Pengunjung Dinamis
+        // Hitungan Pengunjung Dinamis & Realtime
         const readerStat = document.getElementById('stat-readers');
+        
+        function updateVisitorCounter() {
+            api.getVisitor((res) => { 
+                if(res && res.count) readerStat.innerText = res.count.toLocaleString() + "+"; 
+            });
+        }
+
         if (!sessionStorage.getItem('visited_today')) {
             api.hitVisitor((res) => {
                 if (res && res.count) {
@@ -466,9 +474,11 @@
                 }
             }, (err) => console.log('Gagal update visitor', err));
         } else {
-            // Biarkan default dummy atau tarik count lagi
-            api.hitVisitor((res) => { if(res && res.count) readerStat.innerText = res.count.toLocaleString() + "+"; });
+            updateVisitorCounter();
         }
+
+        // Polling setiap 15 detik untuk efek realtime
+        setInterval(updateVisitorCounter, 15000);
     };
 
     function showToast(msg, isError = false) {
